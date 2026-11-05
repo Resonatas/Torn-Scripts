@@ -183,7 +183,7 @@
   // DOM READING (text based; see SELECTOR_HINTS to override)
   // ===================================================================
   const LEVEL_RE = /^\s*(\d{1,2})\s*\/\s*10\s*$/;
-  const TIMER_RE = /^\s*(\d+\s*[dhms]\s*)+$|^\s*\d{1,2}(:\d{2}){1,2}\s*$/i;
+  const TIMER_RE = /^\s*(\d+\s*[dhms]\s*)+$|^\s*\d{1,2}(:\d{2}){1,3}\s*$/i;
   const NOISE_RE = /^\s*(join|hrs?|hours?|\d+\s*hrs?)\s*$/i;
 
   function isOurs(node) {
@@ -207,12 +207,25 @@
   const isNoise = (t) => NOISE_RE.test(t) || TIMER_RE.test(t) || LEVEL_RE.test(t);
   const isNumber = (t) => /^\d{1,3}\s*%?$/.test(t.trim());
 
+  // Elements whose whole text reads like "8/10" even when split over child spans
+  // (Torn shows a big "8" and a small "/10"). Smallest matching elements only.
+  function levelElements(root) {
+    const found = [];
+    root.querySelectorAll('span,div,p,b,i,strong,em,a,li').forEach((e) => {
+      if (e.children.length > 4 || isOurs(e)) return;
+      const t = e.textContent;
+      if (t.length > 12 || !LEVEL_RE.test(t.replace(/\s+/g, ''))) return;
+      found.push(e);
+    });
+    return found.filter((e) => !found.some((o) => o !== e && e.contains(o)));
+  }
+
   function findPanels() {
     if (SELECTOR_HINTS.panel) {
       return Array.from(document.querySelectorAll(SELECTOR_HINTS.panel)).filter((p) => !isOurs(p));
     }
     // Every "N/10" text marks one OC. Climb while the parent still holds only that one level.
-    const levelEls = textNodes(document.body).filter((n) => LEVEL_RE.test(n.nodeValue)).map((n) => n.parentElement);
+    const levelEls = levelElements(document.body);
     const panels = [];
     levelEls.forEach((lv) => {
       let cur = lv;
@@ -232,10 +245,10 @@
       const e = panel.querySelector(SELECTOR_HINTS.level);
       text = e ? e.textContent : null;
     } else {
-      const n = textNodes(panel).find((x) => LEVEL_RE.test(x.nodeValue));
-      text = n ? n.nodeValue : null;
+      const e = levelElements(panel)[0];
+      text = e ? e.textContent : null;
     }
-    const m = text && text.match(/(\d{1,2})\s*\/\s*10/);
+    const m = text && text.replace(/\s+/g, '').match(/(\d{1,2})\/10/);
     return m ? parseInt(m[1], 10) : null;
   }
 
@@ -771,7 +784,7 @@
     });
     if (!lastScan.length) lines.push('No panels detected (no "N/10" text found).');
     const all = textNodes(document.body);
-    lines.push('Text nodes matching N/10: ' + all.filter((n) => LEVEL_RE.test(n.nodeValue)).length +
+    lines.push('Elements reading N/10: ' + levelElements(document.body).length +
       ', matching Join: ' + all.filter((n) => /^\s*join\s*$/i.test(n.nodeValue)).length);
     const first = lastScan[0] && lastScan[0].el;
     if (first) {

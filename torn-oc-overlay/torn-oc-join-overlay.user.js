@@ -386,7 +386,7 @@
   function badgeFor(res) {
     const b = document.createElement('span');
     b.className = 'ocjo ocjo-badge ' + (res.pass ? 'pass' : 'fail') + (res.kind === 'unlisted' ? ' unlisted' : '');
-    const mark = res.pass ? '✔' : '✘';
+    const mark = res.pass ? '\u2714' : '\u2718';
     let text;
     let tip;
     if (res.kind === 'any') {
@@ -719,7 +719,7 @@
     const tos = el('table', {});
     [['Data storage', 'Only locally'], ['Data sharing', 'Nobody'],
      ['Purpose', 'Personal use / faction OC joining overlay'], ['Key storage', 'Stored locally, not shared'],
-     ['Access level', 'Limited (or custom key: faction → crimes only)']].forEach((r) => {
+     ['Access level', 'Limited (or custom key: faction \u2192 crimes only)']].forEach((r) => {
       const tr = el('tr', {}); tr.append(el('td', {}, r[0]), el('td', {}, r[1])); tos.appendChild(tr);
     });
 
@@ -743,7 +743,7 @@
       el('h3', {}, 'Import pasted JSON'), pasteTa, row(mode, impBtn),
       el('h3', {}, 'Import from URL (raw GitHub / Gist)'), url, row(el('label', {}, auto, ' auto-check on page load (max once an hour, only if newer)')), row(urlBtn, urlSave),
       el('h3', {}, 'API mode (optional, off by default)'),
-      el('div', {}, 'The overlay works without a key: your CPR is read from the page. API mode only cross-checks names/levels/roles and shows a status. Needs a Limited key, or a custom key with only faction → crimes.'),
+      el('div', {}, 'The overlay works without a key: your CPR is read from the page. API mode only cross-checks names/levels/roles and shows a status. Needs a Limited key, or a custom key with only faction \u2192 crimes.'),
       tos, row(el('label', {}, apiOn, ' enable API mode'), keyIn, apiSave),
       el('h3', {}, 'Troubleshooting'), row(dumpBtn), dumpTa
     );

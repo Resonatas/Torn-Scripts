@@ -354,6 +354,7 @@
 .ocjo-bar label{display:flex;align-items:center;gap:4px;cursor:pointer}
 .ocjo-btn{background:#3a3a3a;color:#eee;border:1px solid #666;border-radius:3px;padding:2px 8px;font:12px Arial,sans-serif;cursor:pointer}
 .ocjo-btn:hover{background:#505050}
+.ocjo-fab{position:fixed;left:6px;bottom:6px;z-index:99999;opacity:.75}
 .ocjo-modal-bg{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center}
 .ocjo-modal{box-sizing:border-box;width:94vw;max-width:680px;max-height:90vh;overflow:auto;background:#1e1e1e;color:#ddd;
   border:1px solid #555;border-radius:6px;padding:12px;font:13px/18px Arial,sans-serif}
@@ -412,7 +413,8 @@
       const panels = scanPage();
       lastScan = panels;
       const hasJoin = panels.some((p) => p.slots.length > 0);
-      if (!hasJoin) { removeBar(); return; } // not the recruiting tab (or nothing open)
+      if (!hasJoin) { removeBar(); drawFab(panels.length); return; } // not the recruiting tab (or nothing open/detected)
+      removeFab();
 
       let joinableOcs = 0;
       let joinableSlots = 0;
@@ -443,6 +445,17 @@
     } finally {
       rendering = false;
     }
+  }
+
+  // Small always-available button, shown only when no open slots were detected,
+  // so the editor and the debug dump stay reachable if detection fails.
+  function removeFab() { document.querySelectorAll('.ocjo-fab').forEach((b) => b.remove()); }
+  function drawFab(panelCount) {
+    if (document.querySelector('.ocjo-fab')) return;
+    const b = el('button', { class: 'ocjo ocjo-btn ocjo-fab', type: 'button',
+      title: 'OC Join Overlay: no open OC slots detected (' + panelCount + ' OC panels found). Click for settings / debug dump.' }, 'OC?');
+    b.addEventListener('click', openEditor);
+    document.body.appendChild(b);
   }
 
   // ---------------- control bar ----------------
@@ -757,6 +770,9 @@
       lines.push('#' + i + ' name="' + p.name + '" level=' + p.level + ' openSlots=' + p.slots.map((s) => s.role + '=' + s.cpr).join(', '));
     });
     if (!lastScan.length) lines.push('No panels detected (no "N/10" text found).');
+    const all = textNodes(document.body);
+    lines.push('Text nodes matching N/10: ' + all.filter((n) => LEVEL_RE.test(n.nodeValue)).length +
+      ', matching Join: ' + all.filter((n) => /^\s*join\s*$/i.test(n.nodeValue)).length);
     const first = lastScan[0] && lastScan[0].el;
     if (first) {
       const strip = (node) => {
@@ -783,6 +799,7 @@
 
   function boot() {
     injectStyle();
+    console.info('[OC Join Overlay] started on ' + location.href);
     const obs = new MutationObserver((muts) => {
       // Ignore our own changes and plain text updates (countdown timers).
       const relevant = muts.some((m) => {

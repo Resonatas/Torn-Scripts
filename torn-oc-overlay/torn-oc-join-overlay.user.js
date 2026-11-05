@@ -1,7 +1,9 @@
 // ==UserScript==
 // @name         Torn OC Join Overlay
 // @namespace    https://github.com/local/torn-oc-join-overlay
-// @version      0.1.0
+// @version      0.2.0
+// @updateURL    https://raw.githubusercontent.com/Resonatas/Torn-Scripts/main/torn-oc-overlay/torn-oc-join-overlay.user.js
+// @downloadURL  https://raw.githubusercontent.com/Resonatas/Torn-Scripts/main/torn-oc-overlay/torn-oc-join-overlay.user.js
 // @description  Read-only overlay on the faction OC recruiting list: shows which open slots your own CPR qualifies for.
 // @match        *://www.torn.com/factions.php*
 // @match        *://torn.com/factions.php*

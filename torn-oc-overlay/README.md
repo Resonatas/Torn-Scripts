@@ -21,3 +21,6 @@ The script was written without access to torn.com. It finds things by text (`N/1
 
 ## API mode (off by default)
 Cross-check only; the CPR always comes from the page. The v2 endpoint, field names (`checkpoint_pass_rate`, `position_info`) and the "empty slots return 0" behaviour are from memory and have **not** been verified with a real call.
+
+## Updating
+The script has `@updateURL`/`@downloadURL` set, so Violentmonkey/Tampermonkey update it automatically. Every change bumps `@version`; without a bump the manager sees nothing new. To update at once: dashboard > the script > check for updates (or Update all). Raw GitHub caches for about 5 minutes.

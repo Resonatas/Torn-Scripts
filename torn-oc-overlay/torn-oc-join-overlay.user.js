@@ -82,7 +82,7 @@
     },
   };
 
-  const DEFAULT_SETTINGS = { joinableOnly: false, remoteUrl: '', autoCheck: false, apiMode: false };
+  const DEFAULT_SETTINGS = { joinableOnly: false, hideDesc: true, remoteUrl: '', autoCheck: false, apiMode: false };
   let settings = Object.assign({}, DEFAULT_SETTINGS, store.get('settings', {}));
   let config = loadConfig();
   let apiCrimes = null;        // last API result (array) or null
@@ -351,13 +351,15 @@
   // ===================================================================
   const CSS = `
 .ocjo-rel{position:relative !important}
-.ocjo-badge{position:absolute;top:-8px;right:4px;z-index:5;max-width:92%;padding:1px 6px;border-radius:9px;
+.ocjo-badge{position:absolute;bottom:100%;margin-bottom:1px;right:4px;z-index:5;max-width:92%;padding:1px 6px;border-radius:9px;
   font:600 10px/14px Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;
   border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .ocjo-badge.pass{background:#1f5e2e;color:#d9ffe0;border-color:#3fbf5a}
 .ocjo-badge.fail{background:#6b1f1f;color:#ffe0e0;border-color:#e05555}
 .ocjo-badge.unlisted.pass{background:#6b5410;color:#fff0c2;border-color:#e0b020}
 .ocjo-badge.unlisted.fail{background:#6b1f1f;color:#ffe0e0;border:1px dashed #e0b020}
+.ocjo-pad{padding-top:16px !important}
+.ocjo-nodesc{display:none !important}
 .ocjo-ok{outline:2px solid #3fbf5a !important;outline-offset:-2px;box-shadow:0 0 10px rgba(63,191,90,.55) !important}
 .ocjo-dim{opacity:.45}
 .ocjo-hide{display:none !important}
@@ -392,7 +394,7 @@
 
   function clearOverlay() {
     document.querySelectorAll('.ocjo-badge').forEach((e) => e.remove());
-    ['ocjo-ok', 'ocjo-dim', 'ocjo-hide', 'ocjo-rel'].forEach((c) => {
+    ['ocjo-ok', 'ocjo-dim', 'ocjo-hide', 'ocjo-rel', 'ocjo-pad', 'ocjo-nodesc'].forEach((c) => {
       document.querySelectorAll('.' + c).forEach((e) => e.classList.remove(c));
     });
   }
@@ -439,8 +441,11 @@
           openSlots++;
           if (getComputedStyle(s.el).position === 'static') s.el.classList.add('ocjo-rel');
           s.el.appendChild(badgeFor(s.res));
+          // Room above the slot row so the badge sits above the role/CPR text.
+          if (s.el.parentElement && s.el.parentElement !== p.el) s.el.parentElement.classList.add('ocjo-pad');
           if (s.res.pass) joinable++;
         });
+        if (settings.hideDesc) hideDescription(p);
         joinableSlots += joinable;
         if (joinable) joinableOcs++;
         // Don't dim/hide a "panel" that is really most of the page (detection failed).
@@ -471,6 +476,25 @@
     document.body.appendChild(b);
   }
 
+  // Hide the flavour text: the longest prose block outside the slots, plus its
+  // wrapper while the wrapper holds little more than that text ("Show more" etc).
+  function hideDescription(p) {
+    let best = null;
+    textNodes(p.el).forEach((n) => {
+      const t = n.nodeValue.trim();
+      if (t.length < 60 || p.slots.some((s) => s.el.contains(n))) return;
+      if (!best || t.length > best.nodeValue.trim().length) best = n;
+    });
+    if (!best) return;
+    const len = best.nodeValue.trim().length;
+    let cur = best.parentElement;
+    while (cur.parentElement && cur.parentElement !== p.el &&
+           cur.parentElement.textContent.trim().length <= len + 25) {
+      cur = cur.parentElement;
+    }
+    cur.classList.add('ocjo-nodesc');
+  }
+
   // ---------------- control bar ----------------
   function removeBar() { document.querySelectorAll('.ocjo-bar').forEach((b) => b.remove()); }
 
@@ -490,10 +514,15 @@
     cb.checked = !!settings.joinableOnly;
     cb.addEventListener('change', () => { settings.joinableOnly = cb.checked; saveSettings(); render(); });
     label.append(cb, 'Only joinable');
+    const label2 = el('label', {});
+    const cb2 = el('input', { type: 'checkbox' });
+    cb2.checked = !!settings.hideDesc;
+    cb2.addEventListener('change', () => { settings.hideDesc = cb2.checked; saveSettings(); render(); });
+    label2.append(cb2, 'Hide descriptions');
     const count = el('span', {}, 'Joinable: ' + ocs + ' OC' + (ocs === 1 ? '' : 's') + ' / ' + slots + ' of ' + open + ' open slots');
     const edit = el('button', { class: 'ocjo-btn', type: 'button' }, 'Requirements');
     edit.addEventListener('click', openEditor);
-    bar.append(title, label, count);
+    bar.append(title, label, label2, count);
     if (settings.apiMode) {
       const st = el('span', { title: 'API cross-check status' }, apiStatus || 'API: not checked yet');
       const rf = el('button', { class: 'ocjo-btn', type: 'button' }, 'Refresh API');

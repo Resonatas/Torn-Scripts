@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn OC Join Overlay
 // @namespace    https://github.com/local/torn-oc-join-overlay
-// @version      0.2.0
+// @version      0.2.1
 // @updateURL    https://raw.githubusercontent.com/Resonatas/Torn-Scripts/main/torn-oc-overlay/torn-oc-join-overlay.user.js
 // @downloadURL  https://raw.githubusercontent.com/Resonatas/Torn-Scripts/main/torn-oc-overlay/torn-oc-join-overlay.user.js
 // @description  Read-only overlay on the faction OC recruiting list: shows which open slots your own CPR qualifies for.
@@ -353,7 +353,7 @@
   // ===================================================================
   const CSS = `
 .ocjo-rel{position:relative !important}
-.ocjo-badge{position:absolute;bottom:100%;margin-bottom:1px;right:4px;z-index:5;max-width:92%;padding:1px 6px;border-radius:9px;
+.ocjo-badge{position:absolute;bottom:100%;margin:0 auto 1px;left:0;right:0;width:max-content;z-index:5;max-width:100%;box-sizing:border-box;padding:1px 6px;border-radius:9px;
   font:600 10px/14px Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;
   border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .ocjo-badge.pass{background:#1f5e2e;color:#d9ffe0;border-color:#3fbf5a}

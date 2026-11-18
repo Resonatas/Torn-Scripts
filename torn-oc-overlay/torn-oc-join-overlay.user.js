@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn OC Join Overlay
 // @namespace    https://github.com/local/torn-oc-join-overlay
-// @version      0.2.2
+// @version      0.2.3
 // @updateURL    https://raw.githubusercontent.com/Resonatas/Torn-Scripts/main/torn-oc-overlay/torn-oc-join-overlay.user.js
 // @downloadURL  https://raw.githubusercontent.com/Resonatas/Torn-Scripts/main/torn-oc-overlay/torn-oc-join-overlay.user.js
 // @description  Read-only overlay on the faction OC recruiting list: shows which open slots your own CPR qualifies for.
@@ -369,6 +369,7 @@
   gap:6px 12px;align-items:center;padding:5px 8px;margin:0 0 4px;background:#222;color:#ddd;border:1px solid #444;border-radius:4px;
   font:12px/16px Arial,sans-serif}
 .ocjo-bar label{display:flex;align-items:center;gap:4px;cursor:pointer}
+.ocjo-bar.ocjo-fixed{position:fixed;left:8px;bottom:8px;top:auto;right:auto;width:auto;max-width:calc(100vw - 16px);z-index:99999;box-shadow:0 2px 10px rgba(0,0,0,.7)}
 .ocjo-btn{background:#3a3a3a;color:#eee;border:1px solid #666;border-radius:3px;padding:2px 8px;font:12px Arial,sans-serif;cursor:pointer}
 .ocjo-btn:hover{background:#505050}
 .ocjo-fab{position:fixed;left:6px;bottom:6px;z-index:99999;opacity:.75}
@@ -505,9 +506,17 @@
     if (!bar) {
       bar = document.createElement('div');
       bar.className = 'ocjo ocjo-bar';
-      firstPanel.parentNode.insertBefore(bar, firstPanel);
-    } else if (bar.nextSibling !== firstPanel && !bar.contains(firstPanel) && firstPanel.parentNode) {
-      firstPanel.parentNode.insertBefore(bar, firstPanel);
+    }
+    // Only sit inside the list when its container is a normal block. In a flex/grid
+    // container the bar would become a layout item and squash the panels, so float it.
+    const parent = firstPanel.parentNode;
+    const display = parent && parent.nodeType === 1 ? getComputedStyle(parent).display : '';
+    const inFlow = display === 'block' || display === 'flow-root';
+    bar.classList.toggle('ocjo-fixed', !inFlow);
+    if (inFlow) {
+      if (bar.nextSibling !== firstPanel && !bar.contains(firstPanel)) parent.insertBefore(bar, firstPanel);
+    } else if (bar.parentNode !== document.body) {
+      document.body.appendChild(bar);
     }
     bar.textContent = '';
     const title = el('strong', {}, 'OC Join');

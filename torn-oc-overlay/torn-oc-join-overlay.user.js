@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn OC Join Overlay
 // @namespace    https://github.com/local/torn-oc-join-overlay
-// @version      0.2.1
+// @version      0.2.2
 // @updateURL    https://raw.githubusercontent.com/Resonatas/Torn-Scripts/main/torn-oc-overlay/torn-oc-join-overlay.user.js
 // @downloadURL  https://raw.githubusercontent.com/Resonatas/Torn-Scripts/main/torn-oc-overlay/torn-oc-join-overlay.user.js
 // @description  Read-only overlay on the faction OC recruiting list: shows which open slots your own CPR qualifies for.
@@ -818,6 +818,20 @@
     lines.push('Elements reading N/10: ' + levelElements(document.body).length +
       ', matching Join: ' + all.filter((n) => /^\s*join\s*$/i.test(n.nodeValue)).length);
     const first = lastScan[0] && lastScan[0].el;
+    const chain = (e) => {
+      const out = [];
+      for (let n = e; n && n !== document.documentElement && out.length < 12; n = n.parentElement) {
+        const cs = getComputedStyle(n);
+        out.push(n.tagName.toLowerCase() + '.' + String(n.className).replace(/\s+/g, '.').slice(0, 60) +
+          ' display=' + cs.display + (cs.display.includes('flex') ? ' dir=' + cs.flexDirection : '') +
+          ' w=' + Math.round(n.getBoundingClientRect().width));
+      }
+      return out.join('\n  ');
+    };
+    lines.push('', 'Viewport: ' + innerWidth + 'x' + innerHeight + ', zoom ' + devicePixelRatio);
+    const bar = document.querySelector('.ocjo-bar');
+    if (bar) lines.push('Bar ancestors:\n  ' + chain(bar));
+    if (first) lines.push('First panel ancestors:\n  ' + chain(first));
     if (first) {
       const strip = (node) => {
         const c = node.cloneNode(true);

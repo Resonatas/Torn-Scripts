@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn OC Join Overlay
 // @namespace    https://github.com/local/torn-oc-join-overlay
-// @version      0.2.3
+// @version      0.2.4
 // @updateURL    https://raw.githubusercontent.com/Resonatas/Torn-Scripts/main/torn-oc-overlay/torn-oc-join-overlay.user.js
 // @downloadURL  https://raw.githubusercontent.com/Resonatas/Torn-Scripts/main/torn-oc-overlay/torn-oc-join-overlay.user.js
 // @description  Read-only overlay on the faction OC recruiting list: shows which open slots your own CPR qualifies for.
@@ -211,10 +211,13 @@
 
   // Elements whose whole text reads like "8/10" even when split over child spans
   // (Torn shows a big "8" and a small "/10"). Smallest matching elements only.
+  // Page furniture that also shows things like the Chain bar's "0/10": never an OC.
+  const NOT_OC_AREA = '#sidebarroot,#sidebar,header,footer,nav';
+
   function levelElements(root) {
     const found = [];
     root.querySelectorAll('span,div,p,b,i,strong,em,a,li').forEach((e) => {
-      if (e.children.length > 4 || isOurs(e)) return;
+      if (e.children.length > 4 || isOurs(e) || e.closest(NOT_OC_AREA)) return;
       const t = e.textContent;
       if (t.length > 12 || !LEVEL_RE.test(t.replace(/\s+/g, ''))) return;
       found.push(e);
@@ -328,7 +331,9 @@
     const result = [];
     findPanels().forEach((panel) => {
       const level = readLevel(panel);
-      if (level === null) return;
+      if (level === null || level < 1) return;
+      // Safety net: a real OC panel is small and is never page furniture.
+      if (panel.closest(NOT_OC_AREA) || panel.querySelector(NOT_OC_AREA) || panel.querySelectorAll('*').length > 800) return;
       const slots = [];
       findJoins(panel).forEach((j) => {
         const s = readSlot(j, panel);
